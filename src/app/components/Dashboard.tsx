@@ -6,11 +6,11 @@ import CSS from 'csstype';
 import Button from 'react-bootstrap/Button';
 import {
     MDBModal,
-    MDBModalDialog, 
+    MDBModalDialog,
     MDBModalContent,
     MDBModalBody,
     MDBModalFooter,
-  } from 'mdb-react-ui-kit';
+} from 'mdb-react-ui-kit';
 
 import Accelerometer from './Accelerometer';
 import Laps from "./Laps";
@@ -18,6 +18,8 @@ import Tires from "./Tires";
 import Steering from "./Steering";
 import Map from "./Map";
 import Tach from "./Tach";
+
+import { Packet } from "../types/Packet";
 
 const darkTheme = createTheme({
     palette: {
@@ -83,121 +85,18 @@ const dataKeyStyle = {
     fontSize: '12px',
 }
 
-type Packet = {
-    TimestampMS: number,
-
-    EngineMaxRpm: number,
-    EngineIdleRpm: number,
-    CurrentEngineRpm: number,
-
-    AccelerationX: number,
-    AccelerationY: number, 
-    AccelerationZ: number,
-    
-    VelocityX: number,
-    VelocityY: number,
-    VelocityZ: number,
-
-    AngularVelocityX: number,
-    AngularVelocityY: number,
-    AngularVelocityZ: number,
-
-    Yaw: number,
-    Pitch: number,
-    Roll: number,
-
-    NormalizedSuspensionTravelFrontLeft: number,
-    NormalizedSuspensionTravelFrontRight: number,
-    NormalizedSuspensionTravelRearLeft: number,
-    NormalizedSuspensionTravelRearRight: number,
-
-    TireSlipRatioFrontLeft: number,
-    TireSlipRatioFrontRight: number,
-    TireSlipRatioRearLeft: number,
-    TireSlipRatioRearRight: number,
-
-    WheelRotationSpeedFrontLeft: number,
-    WheelRotationSpeedFrontRight: number,
-    WheelRotationSpeedRearLeft: number,
-    WheelRotationSpeedRearRight: number,
-
-    WheelOnRumbleStripFrontLeft: number,
-    WheelOnRumbleStripFrontRight: number,
-    WheelOnRumbleStripRearLeft: number,
-    WheelOnRumbleStripRearRight: number,
-
-    WheelInPuddleDepthFrontLeft: number,
-    WheelInPuddleDepthFrontRight: number,
-    WheelInPuddleDepthRearLeft: number,
-    WheelInPuddleDepthRearRight: number,
-
-    SurfaceRumbleFrontLeft: number,
-    SurfaceRumbleFrontRight: number,
-    SurfaceRumbleRearLeft: number,
-    SurfaceRumbleRearRight: number,
-
-    TireSlipAngleFrontLeft: number,
-    TireSlipAngleFrontRight: number,
-    TireSlipAngleRearLeft: number,
-    TireSlipAngleRearRight: number,
-
-    TireCombinedSlipFrontLeft: number,
-    TireCombinedSlipFrontRight: number,
-    TireCombinedSlipRearLeft: number,
-    TireCombinedSlipRearRight: number,
-
-    SuspensionTravelMetersFrontLeft: number,
-    SuspensionTravelMetersFrontRight: number,
-    SuspensionTravelMetersRearLeft: number,
-    SuspensionTravelMetersRearRight: number,
-
-    CarOrdinal: number,
-    CarClass: number,
-    CarPerformanceIndex: number,
-    DrivetrainType: number,
-    NumCylinders: number,
-
-    IsRaceOn: number,
-    PositionX: number,
-    PositionY: number,
-    PositionZ: number,
-    Speed: number,
-    Power: number,
-    Torque: number,
-    TireTempFl: number,
-    TireTempFr: number,
-    TireTempRl: number,
-    TireTempRr: number,
-    Boost: number,
-    Fuel: number,
-    Distance: number,
-    BestLapTime: number,
-    LastLapTime: number,
-    CurrentLapTime: number,
-    CurrentRaceTime: number,
-    Lap: number,
-    RacePosition: number,
-    Accelerator: number,
-    Brake: number,
-    Clutch: number,
-    Handbrake: number,
-    Gear: number,
-    Steer: number,
-    NormalDrivingLine: number,
-    NormalAiBrakeDifference: number
-}
 
 var dataCount = 0
 
-function secondsToTimeString(seconds:number) {
-    var s = Math.floor(seconds%60)
-    var m = Math.floor((seconds*1000/(1000*60))%60)
+function secondsToTimeString(seconds: number) {
+    var s = Math.floor(seconds % 60)
+    var m = Math.floor((seconds * 1000 / (1000 * 60)) % 60)
     var strFormat = "MM:SS" // "MM:SS:XXX"
 
-    strFormat = strFormat.replace(/MM/, m+"")
-    strFormat = strFormat.replace(/SS/, s+"")
+    strFormat = strFormat.replace(/MM/, m + "")
+    strFormat = strFormat.replace(/SS/, s + "")
     // strFormat = strFormat.replace(/XXX/, ms.slice(0,3)) //toString().slice(0,3));
-    
+
     return strFormat;
 }
 
@@ -210,17 +109,17 @@ export const Dashboard = () => {
     const [lapData, setLapData] = useState([])
     const [fuelPerLap, setFuelPerLap] = useState('N/A')
     const [mpg, setMpg] = useState('0')
-    const [previousCoords, setPreviousCoords] = useState([0,0,0])
+    const [previousCoords, setPreviousCoords] = useState([0, 0, 0])
     const [previousFuel, setPreviousFuel] = useState(1)
     const [fullscreenModal, setFullscreenModal] = useState(false);
     const [settingsModal, setSettingsModal] = useState(false);
 
     const toggleFullscreenModalShow = () => setFullscreenModal(!fullscreenModal);
     const toggleSettingsModalShow = () => setSettingsModal(!settingsModal);
-    const setPrevFuel = (fuel:number) => { setPreviousFuel(fuel) }
+    const setPrevFuel = (fuel: number) => { setPreviousFuel(fuel) }
 
     React.useEffect(() => {
-        ipcRenderer.on('new-data-for-dashboard', (event:any, message:any) => { 
+        ipcRenderer.on('new-data-for-dashboard', (event: any, message: any) => {
             setData(message)
 
             dataCount = dataCount + 1
@@ -251,8 +150,8 @@ export const Dashboard = () => {
                 // do not use the game's calculation of distance travelled. if you do, the player
                 // can simply go backwardss during a race and the games' distance travelled number will actually decrease
                 // this would, of course, throw off the MPG calculation
-                let distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2) + Math.pow(z2-z1, 2))
-                
+                let distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2))
+
                 previousCoords[0] = message.PositionX
                 previousCoords[1] = message.PositionY
                 previousCoords[2] = message.PositionZ
@@ -266,9 +165,9 @@ export const Dashboard = () => {
                 // convert to gallons
                 fuelUsed = fuelUsed * 13 // 13 gallons is the typical sized fuel tank for a car. Forza doesn't tell you how many gallons their cars have.
 
-                setMpg((distance/fuelUsed).toFixed(0))
+                setMpg((distance / fuelUsed).toFixed(0))
             }
-        });          
+        });
     }, [])
 
     React.useEffect(() => {
@@ -305,7 +204,7 @@ export const Dashboard = () => {
         }
 
         // update fuel numbers
-        setFuelPerLap((100 * ((1 - data.Fuel) / lapNumber)).toFixed(2)+'%')
+        setFuelPerLap((100 * ((1 - data.Fuel) / lapNumber)).toFixed(2) + '%')
     }
 
     return (
@@ -320,9 +219,9 @@ export const Dashboard = () => {
                     />
                 </div>
                 <div style={lapContainerStyle}>
-                    <Laps 
-                        LapNumber={lapNumber + 1} 
-                        LapTime={data ? data.CurrentLapTime.toFixed(3) : '0.00'} 
+                    <Laps
+                        LapNumber={lapNumber + 1}
+                        LapTime={data ? data.CurrentLapTime.toFixed(3) : '0.00'}
                         PreviousLaps={lapData}
                     />
                 </div>
@@ -332,12 +231,12 @@ export const Dashboard = () => {
             <div style={centerColumnStyle}>
                 <div style={mainHudContainerStyle}>
                     <div style={mainHudTopStyle}>
-                        <table style={{width: '100%', textAlign: 'center', fontWeight: 'normal'}}>
+                        <table style={{ width: '100%', textAlign: 'center', fontWeight: 'normal' }}>
                             <tr>
                                 <td style={{}}>
                                     <div style={dataValueStyle}>
-                                        <Button variant="outline-danger" onClick={() => {  
-                                            ipcRenderer.send('switch-recording-mode', ''); 
+                                        <Button variant="outline-danger" onClick={() => {
+                                            ipcRenderer.send('switch-recording-mode', '');
                                             setRecordingState(recordingState === 'Record' ? 'Stop Recording' : 'Record');
                                         }}>
                                             {recordingState}
@@ -346,14 +245,14 @@ export const Dashboard = () => {
                                 </td>
                                 <td style={{}}>
                                     <div style={dataValueStyle}>
-                                        <Button variant="outline-danger" onClick={() => { 
+                                        <Button variant="outline-danger" onClick={() => {
                                             setLapCoords([])
                                             setPrevLapCoords([])
                                             setLapNumber(-1)
                                             setLapData([])
                                             setFuelPerLap('N/A')
                                             setMpg('0')
-                                            setPreviousCoords([0,0,0])
+                                            setPreviousCoords([0, 0, 0])
                                             setPreviousFuel(1)
                                             lapCoords.length = 0
                                         }}>
@@ -405,26 +304,26 @@ export const Dashboard = () => {
                         </table>
                     </div>
 
-                    <div style={{height: '80%'}}>
-                        <Tach 
-                            outerRadius={90} 
-                            innerRadius={90} 
-                            startAngle={0} 
-                            endAngle={data ? (data.CurrentEngineRpm / data.EngineMaxRpm) * 2 * Math.PI * (340/360) : 2 * Math.PI * (320/360)} 
+                    <div style={{ height: '80%' }}>
+                        <Tach
+                            outerRadius={90}
+                            innerRadius={90}
+                            startAngle={0}
+                            endAngle={data ? (data.CurrentEngineRpm / data.EngineMaxRpm) * 2 * Math.PI * (340 / 360) : 2 * Math.PI * (320 / 360)}
                             rpm={data ? Math.round(data.CurrentEngineRpm).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 0}
-                            gear={data ? data.Gear == 0 ? 'R': data.Gear : 'N'}
+                            gear={data ? data.Gear == 0 ? 'R' : data.Gear : 'N'}
                             speed={data ? Math.abs(Math.round(data.Speed * 2.237)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 0}
                         />
                     </div>
 
                     <div style={mainHudBottomStyle}>
-                        <table style={{width: '100%', textAlign: 'center', fontWeight: 'normal'}}>
+                        <table style={{ width: '100%', textAlign: 'center', fontWeight: 'normal' }}>
                             <tr>
-                                <td style={{width: '20%'}}><div style={dataValueStyle}>{data ? fuelPerLap : 'N/A'}</div></td>
-                                <td style={{width: '20%'}}><div style={dataValueStyle}>{data ? (data.Fuel*100).toFixed(3) : 100.000}%</div></td>
-                                <td style={{width: '20%'}}><div style={dataValueStyle}>{data ? secondsToTimeString(data.CurrentLapTime) : '0:00'}</div></td>
-                                <td style={{width: '20%'}}><div style={dataValueStyle}>N/A</div></td>
-                                <td style={{width: '20%'}}><div style={dataValueStyle}>{data ? mpg : 1}</div></td>
+                                <td style={{ width: '20%' }}><div style={dataValueStyle}>{data ? fuelPerLap : 'N/A'}</div></td>
+                                <td style={{ width: '20%' }}><div style={dataValueStyle}>{data ? (data.Fuel * 100).toFixed(3) : 100.000}%</div></td>
+                                <td style={{ width: '20%' }}><div style={dataValueStyle}>{data ? secondsToTimeString(data.CurrentLapTime) : '0:00'}</div></td>
+                                <td style={{ width: '20%' }}><div style={dataValueStyle}>N/A</div></td>
+                                <td style={{ width: '20%' }}><div style={dataValueStyle}>{data ? mpg : 1}</div></td>
                             </tr>
                             <tr>
                                 <td><div style={dataKeyStyle}>FUEL/LAP</div></td>
@@ -465,22 +364,22 @@ export const Dashboard = () => {
                     />
                 </div>
                 <div style={basicTelemetryContainerStyle}>
-                    <Steering 
-                        power={data ? data.Power : 0} 
-                        torque={data ? data.Torque : 0} 
-                        throttle={data ? data.Accelerator : 0} 
-                        steering={data ? data.Steer : 0} 
+                    <Steering
+                        power={data ? data.Power : 0}
+                        torque={data ? data.Torque : 0}
+                        throttle={data ? data.Accelerator : 0}
+                        steering={data ? data.Steer : 0}
                         boost={data ? data.Boost : 0}
-                        outerRadius={90} 
-                        innerRadius={90} 
-                        startAngle={0} 
-                        endAngle={data ? (data.CurrentEngineRpm / data.EngineMaxRpm) * 2 * Math.PI * (340/360) : 2 * Math.PI * (320/360)} 
+                        outerRadius={90}
+                        innerRadius={90}
+                        startAngle={0}
+                        endAngle={data ? (data.CurrentEngineRpm / data.EngineMaxRpm) * 2 * Math.PI * (340 / 360) : 2 * Math.PI * (320 / 360)}
                     />
                 </div>
                 <div style={basicTelemetryContainerStyle}>
-                    <Map 
-                        Coords={lapCoords} 
-                        PrevLapCoords={prevLapCoords} 
+                    <Map
+                        Coords={lapCoords}
+                        PrevLapCoords={prevLapCoords}
                         LapNumber={lapNumber}
                         Position={data ? data.RacePosition : 0}
                         Distance={data ? data.Distance.toFixed(0) : 0}
